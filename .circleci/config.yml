@@ -116,7 +116,8 @@ jobs:
               cd frontend
               npm install
               npm test
-        - notify_on_failure               
+        - notify_on_failure   
+
     test-backend:
       docker:
         - image: cimg/node:13.8.0
@@ -129,7 +130,7 @@ jobs:
             command: |
               cd backend
               npm install
-              npm test
+              npm run test
         - notify_on_failure
         - save_cache:
             paths: [backend/node_modules]
