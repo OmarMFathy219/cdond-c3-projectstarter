@@ -1,18 +1,27 @@
 version: 2.1
 
 commands:
-  install_amsible:
-    description: Install Ansible
-    steps:
+  install_ansible:
+      description: Install Ansible 
+      steps:
       - run:
-          name: Install Ansible
+          name: Install Ansible 
           command: |
-            sudo apt-get update
-            sudo apt-get install software-properties-common
-            sudo apt-add-repository --yes --update ppa:ansible/ansible
-            sudo apt-get install ansible -y
-            ansible --version
-
+            sudo apt update
+            sudo apt install software-properties-common -y
+            sudo add-apt-repository --yes --update ppa:ansible/ansible
+            sudo apt install ansible -y
+  install_nodejs:
+      description: Install Node.js 13
+      steps:
+      - run:
+          name: Install Node.js 13
+          command: |
+            sudo apt update -y && curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+            sudo apt install -y nodejs 
+            
+            sudo npm install --global n
+            sudo n 13.8.0 
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
