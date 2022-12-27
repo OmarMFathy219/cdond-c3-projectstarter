@@ -291,95 +291,95 @@ jobs:
       - revert-migrations
 #      # Here's where you will add some code to rollback on failure      
 
-deploy-frontend:
-  docker:
-    - image: cimg/base:stable
-  steps:
-    - checkout
-    - install_awscli
-    - install_nodejs
-    - restore_cache:
-        keys: [frontend-deps]
-    - run:
-        name: Install dependencies
-        command: |
-          cd frontend
-          npm install
-    - run:
-        name: Get backend url
-        command: |
-          BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --output text)
-          export API_URL="http://${BACKEND_PUBLIC_IP}:3030"
-          echo "API_URL = ${API_URL}"
-          echo "API_URL=http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
-          cat frontend/.env
-    - run:
-        name: Deploy frontend objects
-        command: |
-          cd frontend
-          npm install
-          npm run build
-          aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-          
-    - notify_on_failure
-    - destroy-environment
-    - revert-migrations 
+  deploy-frontend:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - install_awscli
+      - install_nodejs
+      - restore_cache:
+          keys: [frontend-deps]
+      - run:
+          name: Install dependencies
+          command: |
+            cd frontend
+            npm install
+      - run:
+          name: Get backend url
+          command: |
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text)
+            export API_URL="http://${BACKEND_PUBLIC_IP}:3030"
+            echo "API_URL = ${API_URL}"
+            echo "API_URL=http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
+            cat frontend/.env
+      - run:
+          name: Deploy frontend objects
+          command: |
+            cd frontend
+            npm install
+            npm run build
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            
+      - notify_on_failure
+      - destroy-environment
+      - revert-migrations 
 
-#       # Here's where you will add some code to rollback on failure      
+  #       # Here's where you will add some code to rollback on failure      
                   
-deploy-backend:
-  docker:
-    - image: cimg/base:stable
-      environment:
-      NODE_ENV: "production"
-      VERSION: "1"
-      ENVIRONMENT: "production"
-      TYPEORM_CONNECTION: $TYPEORM_CONNECTION
-      TYPEORM_HOST: $TYPEORM_HOST
-      TYPEORM_USERNAME: $TYPEORM_USERNAME
-      TYPEORM_PASSWORD: $TYPEORM_PASSWORD
-      TYPEORM_DATABASE: $TYPEORM_DATABASE
-      TYPEORM_PORT: $TYPEORM_PORT
-      TYPEORM_MIGRATIONS_DIR: "./migrations"
-      TYPEORM_ENTITIES: "./modules/domain/**/*.entity{.ts,.js}"
-      TYPEORM_MIGRATIONS: "./migrations/*.ts"
-  steps:
-    - checkout
-    - install_awscli
-    - install_ansible
-    - install_nodejs
-    - add_ssh_keys:
-        fingerprints: ["77:09:6b:cd:5a:99:14:f0:e2:c5:01:01:79:73:6b:1c"]
-    - attach_workspace:
-        at: ~/
-    - restore_cache:
-        keys: [backend-deps]
-    - run:
-        name: Install dependencies
-        command: |
-          sudo apt -y install tar gzip curl
-    - run:
-        name: Package backend
-        command: |
-          cd backend
-          npm install
-          npm run build
-          cd ..
-          tar -C backend -czvf artifact.tar.gz .
-          cp artifact.tar.gz .circleci/ansible/roles/deploy/files      
-    - run:
-        name: Deploy backend
-        command: |
-          export TYPEORM_MIGRATIONS_DIR=./migrations
-          export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
-          export TYPEORM_MIGRATIONS=./migrations/*.ts
-          
-          cd .circleci/ansible
-          cat inventory.txt
-          ansible-playbook -i inventory.txt deploy-backend.yml
+  deploy-backend:
+    docker:
+      - image: cimg/base:stable
+        environment:
+          NODE_ENV: "production"
+          VERSION: "1"
+          ENVIRONMENT: "production"
+          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+          TYPEORM_HOST: $TYPEORM_HOST
+          TYPEORM_USERNAME: $TYPEORM_USERNAME
+          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+          TYPEORM_DATABASE: $TYPEORM_DATABASE
+          TYPEORM_PORT: $TYPEORM_PORT
+          TYPEORM_MIGRATIONS_DIR: "./migrations"
+          TYPEORM_ENTITIES: "./modules/domain/**/*.entity{.ts,.js}"
+          TYPEORM_MIGRATIONS: "./migrations/*.ts"
+    steps:
+      - checkout
+      - install_awscli
+      - install_ansible
+      - install_nodejs
+      - add_ssh_keys:
+          fingerprints: ["77:09:6b:cd:5a:99:14:f0:e2:c5:01:01:79:73:6b:1c"]
+      - attach_workspace:
+          at: ~/
+      - restore_cache:
+          keys: [backend-deps]
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt -y install tar gzip curl
+      - run:
+          name: Package backend
+          command: |
+            cd backend
+            npm install
+            npm run build
+            cd ..
+            tar -C backend -czvf artifact.tar.gz .
+            cp artifact.tar.gz .circleci/ansible/roles/deploy/files      
+      - run:
+          name: Deploy backend
+          command: |
+            export TYPEORM_MIGRATIONS_DIR=./migrations
+            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
+            export TYPEORM_MIGRATIONS=./migrations/*.ts
+            
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
 # smoke-test:
 #     docker:
 #       # Lightweight Docker image 
