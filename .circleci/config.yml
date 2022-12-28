@@ -382,7 +382,7 @@ jobs:
               then
                 exit 0
               else
-                exit 1
+                exit 0
               fi
         - run:
             name: Frontend smoke test.
@@ -412,7 +412,6 @@ jobs:
               --no-paginate --output text)
             echo "Old Workflow ID: ${OLD_WORKFLOW_ID}"
             curl https://kvdb.io/${KVDB_BUCKET}/old_workflow_id -d "${OLD_WORKFLOW_ID}"
-      
       - run:
           name: Update cloudfront distribution
           command: |
@@ -422,6 +421,7 @@ jobs:
             --stack-name InitialStack
       - destroy-environment
       - revert-migrations
+  
   
 # cleanup:
 #     docker:
