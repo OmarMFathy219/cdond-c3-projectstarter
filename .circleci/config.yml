@@ -33,42 +33,38 @@ commands:
             sudo npm install --global n
             sudo n 13.8.0 
   destroy-environment:
-    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
-    parameters:
-      # Add parameter here   
-      workflow_id:
-        default: "${CIRCLE_WORKFLOW_ID:0:7}"
-        type: string
-    steps:
-      - run:
-          name: Destroy environments
-          when: on_fail
-          command: |
-            aws s3 rm s3://udapeople-backend-<< parameters.workflow_id >> --recursive
-            aws cloudformation delete-stack --stack-name "udapeople-backend-<< parameters.workflow_id >>"
-            aws cloudformation delete-stack --stack-name "udapeople-frontend-<< parameters.workflow_id >>"
+      description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+      parameters:
+        Workflow_ID:
+          type: string 
+          default: "${CIRCLE_WORKFLOW_ID:0:7}"   
+      steps:
+        - run:
+            name: Destroy environments
+            when: on_fail
+            command: |
+              aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.Workflow_ID >>
+              aws s3 rm s3://udapeople-<<parameters.Workflow_ID>> --recursive
+              aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.Workflow_ID >>
             
   revert-migrations:
-    description: Revert the last migration if successfully run in the current workflow.
-    parameters:
-      # Add parameter here
-      workflow_id:
-        default: "${CIRCLE_WORKFLOW_ID:0:7}"
-        type: string     
-    steps:
-      - run:
+      description: Revert the last migration if successfully run in the current workflow.
+      parameters:
+        Workflow_ID:
+          type: string 
+          default: "${CIRCLE_WORKFLOW_ID:0:7}"
+      steps:
+       - run:
           name: Revert migrations
-          # Add when this will run
           when: on_fail
           command: |
-            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = $(curl --insecure https://kvdb.io/9GE4jRtKznmVKRfvdBABBe/migration-<< parameters.workflow_id >>")
+            SUCCESS=$(curl --insecure http://kvdb.io/${KVDB_BUCKET}/migration_<< parameters.Workflow_ID >>)
             if(( $SUCCESS==1 )); 
             then
-               cd ~/project/backend
+              cd ~/project/backend
               npm install
-              npm run migrations:revert
-            fi       
+              npm run migration:revert
+            fi
 jobs:
   build-frontend:
     docker:
